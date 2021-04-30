@@ -563,11 +563,27 @@ func parseBitfields(groupName, regName string, fieldEls []*SVDField, bitfieldPre
 			Description: fmt.Sprintf("Position of %s field.", fieldName),
 			Value:       lsb,
 		})
-		fields = append(fields, Bitfield{
-			Name:        fmt.Sprintf("%s_%s%s_%s_Msk", groupName, bitfieldPrefix, regName, fieldName),
-			Description: fmt.Sprintf("Bit mask of %s field.", fieldName),
-			Value:       (0xffffffff >> (31 - (msb - lsb))) << lsb,
-		})
+		if fieldName == "RESERVED" {
+			if lsb == msb {
+				fields = append(fields, Bitfield{
+					Name:        fmt.Sprintf("%s_%s%s_%s_%d_Msk", groupName, bitfieldPrefix, regName, fieldName, lsb),
+					Description: fmt.Sprintf("Bit mask of %s field.", fieldName),
+					Value:       (0xffffffff >> (31 - (msb - lsb))) << lsb,
+				})
+			} else {
+				fields = append(fields, Bitfield{
+					Name:        fmt.Sprintf("%s_%s%s_%s_%d_%d_Msk", groupName, bitfieldPrefix, regName, fieldName, lsb, msb),
+					Description: fmt.Sprintf("Bit mask of %s field.", fieldName),
+					Value:       (0xffffffff >> (31 - (msb - lsb))) << lsb,
+				})
+			}
+		} else {
+			fields = append(fields, Bitfield{
+				Name:        fmt.Sprintf("%s_%s%s_%s_Msk", groupName, bitfieldPrefix, regName, fieldName),
+				Description: fmt.Sprintf("Bit mask of %s field.", fieldName),
+				Value:       (0xffffffff >> (31 - (msb - lsb))) << lsb,
+			})
+		}
 		if lsb == msb { // single bit
 			fields = append(fields, Bitfield{
 				Name:        fmt.Sprintf("%s_%s%s_%s", groupName, bitfieldPrefix, regName, fieldName),
