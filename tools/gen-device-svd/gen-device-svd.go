@@ -557,13 +557,12 @@ func parseBitfields(groupName, regName string, fieldEls []*SVDField, bitfieldPre
 				fmt.Fprintf(os.Stderr, "TODO: enumeratedValue.derivedFrom to a different register: %s\n", enumeratedValues.DerivedFrom)
 			}
 		}
-
-		fields = append(fields, Bitfield{
-			Name:        fmt.Sprintf("%s_%s%s_%s_Pos", groupName, bitfieldPrefix, regName, fieldName),
-			Description: fmt.Sprintf("Position of %s field.", fieldName),
-			Value:       lsb,
-		})
 		if fieldName == "RESERVED" {
+			fields = append(fields, Bitfield{
+				Name:        fmt.Sprintf("%s_%s%s_%s_%d_Pos", groupName, bitfieldPrefix, regName, fieldName, lsb),
+				Description: fmt.Sprintf("Position of %s field.", fieldName),
+				Value:       lsb,
+			})
 			if lsb == msb {
 				fields = append(fields, Bitfield{
 					Name:        fmt.Sprintf("%s_%s%s_%s_%d_Msk", groupName, bitfieldPrefix, regName, fieldName, lsb),
@@ -577,19 +576,31 @@ func parseBitfields(groupName, regName string, fieldEls []*SVDField, bitfieldPre
 					Value:       (0xffffffff >> (31 - (msb - lsb))) << lsb,
 				})
 			}
+			if lsb == msb { // single bit
+				fields = append(fields, Bitfield{
+					Name:        fmt.Sprintf("%s_%s%s_%s_%d", groupName, bitfieldPrefix, regName, fieldName, lsb),
+					Description: fmt.Sprintf("Bit %s.", fieldName),
+					Value:       1 << lsb,
+				})
+			}
 		} else {
+			fields = append(fields, Bitfield{
+				Name:        fmt.Sprintf("%s_%s%s_%s_Pos", groupName, bitfieldPrefix, regName, fieldName),
+				Description: fmt.Sprintf("Position of %s field.", fieldName),
+				Value:       lsb,
+			})
 			fields = append(fields, Bitfield{
 				Name:        fmt.Sprintf("%s_%s%s_%s_Msk", groupName, bitfieldPrefix, regName, fieldName),
 				Description: fmt.Sprintf("Bit mask of %s field.", fieldName),
 				Value:       (0xffffffff >> (31 - (msb - lsb))) << lsb,
 			})
-		}
-		if lsb == msb { // single bit
-			fields = append(fields, Bitfield{
-				Name:        fmt.Sprintf("%s_%s%s_%s", groupName, bitfieldPrefix, regName, fieldName),
-				Description: fmt.Sprintf("Bit %s.", fieldName),
-				Value:       1 << lsb,
-			})
+			if lsb == msb { // single bit
+				fields = append(fields, Bitfield{
+					Name:        fmt.Sprintf("%s_%s%s_%s", groupName, bitfieldPrefix, regName, fieldName),
+					Description: fmt.Sprintf("Bit %s.", fieldName),
+					Value:       1 << lsb,
+				})
+			}
 		}
 		for _, enumEl := range enumeratedValues.EnumeratedValue {
 			enumName := enumEl.Name
